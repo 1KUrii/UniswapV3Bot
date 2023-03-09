@@ -70,11 +70,15 @@ class Exchange:
         price_volume_a = self.get_kline('spot', symbol_a, interval, start, end)
         price_volume_b = self.get_kline('spot', symbol_b, interval, start, end)
         close_date = []
-        close_prices = []
+        close_prices_pair = []
+        close_prices_a = []
+        close_prices_b = []
         for close_a, close_b in zip(price_volume_a, price_volume_b):
             close_date.append(datetime.utcfromtimestamp(int(close_a[0]) / 1000).date())
-            close_prices.append(float(close_b[4]) / float(close_a[4]))
-        return close_date, close_prices
+            close_prices_a.append(float(close_a[4]))
+            close_prices_b.append(float(close_b[4]))
+            close_prices_pair.append(float(close_a[4]) / float(close_b[4]))
+        return close_date, close_prices_pair, close_prices_a, close_prices_b
 
     def main(self):
         price_volume_crv = self.get_kline('spot', 'CRVUSDT', 'D', (2022, 7, 31), (2023, 2, 16))

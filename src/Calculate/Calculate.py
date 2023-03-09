@@ -26,21 +26,19 @@ class Calculate:
 
     def calculate(self):
         exchange = Exchange()
-        date, prices = exchange.get_time_prices(self.token_a_name, self.token_b_name, self.timeframe, self.start_date,
-                                                self.end_date)
+        date, prices_pair, prices_a, prices_b = exchange.get_time_prices(self.token_a_name, self.token_b_name, self.timeframe, self.start_date,
+                                                     self.end_date)
 
-        bot = BotPool(self.token_a_name, self.token_b_name, self.starting_capital)
-        # uniswap = UniswapV3Pool(date[0], prices[0])
-        # for time, price in zip(date, prices):
-        #     pass
-            # uniswap.data_update(time, price)
-            # bot.start_uniswap_strategy()
+        uniswap = UniswapV3Pool(self.token_a_name, self.token_b_name)
+        bot = BotPool(uniswap, self.token_a_name, self.token_b_name, self.starting_capital)
+        for time, price_pair, price_a, price_b in zip(date[::-1], prices_pair[::-1], prices_a[::-1], prices_b[::-1]):
+            uniswap.data_update(time, price_pair, price_a, price_b)
+            bot.start_uniswap_strategy()
 
-        return date, prices
+        return bot
 
     def output(self):
         date, prices = self.calculate()
-        # print(date[0], prices[0])
         for time, price in zip(date, prices):
             print(f"{time}\t{price:.4f}")
 
@@ -48,10 +46,8 @@ class Calculate:
 if __name__ == "__main__":
     try:
         calc = Calculate()
-        date, prices = calc.calculate()
-        print("Date\t\tPrice")
-        for time, price in zip(date, prices):
-            print(f"{time}\t{price:.4f}")
+        bot = calc.calculate()
+        print(bot.list_token)
     except ValueError as e:
         print(f"Error: {str(e)}")
     except Exception as e:
