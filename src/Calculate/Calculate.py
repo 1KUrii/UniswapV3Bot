@@ -31,23 +31,23 @@ class Calculate:
 
         uniswap = UniswapV3Pool(self.token_a_name, self.token_b_name)
         bot = BotPool(uniswap, self.token_a_name, self.token_b_name, self.starting_capital)
-        for time, price_pair, price_a, price_b in zip(date[::-1], prices_pair[::-1], prices_a[::-1], prices_b[::-1]):
+        for time, price_pair, price_a, price_b in zip(date, prices_pair, prices_a, prices_b):
             uniswap.data_update(time, price_pair, price_a, price_b)
             bot.start_uniswap_strategy()
 
         return bot
 
     def output(self):
-        date, prices = self.calculate()
-        for time, price in zip(date, prices):
-            print(f"{time}\t{price:.4f}")
+        bot = self.calculate()
+        print(bot)
+        # print(f"{time}\t{price_pair:.4f}")
 
 
 if __name__ == "__main__":
     try:
         calc = Calculate()
         bot = calc.calculate()
-        print(bot.list_token)
+        print(bot)
     except ValueError as e:
         print(f"Error: {str(e)}")
     except Exception as e:
