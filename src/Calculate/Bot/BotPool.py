@@ -19,13 +19,7 @@ class BotPool:
         self.uniswap = uniswap
 
     def swap_equal(self):
-        usdt_amount = self.list_token_amount[self.USDT]
-        if usdt_amount > 0:
-            split_usdt_amount = usdt_amount / 2
-            self.list_token_amount = self.uniswap.swap_tokens(
-                self.list_token_amount, self.USDT, split_usdt_amount, self.token_a_name)
-            self.list_token_amount = self.uniswap.swap_tokens(
-                self.list_token_amount, self.USDT, split_usdt_amount, self.token_b_name)
+        self.convert_stable()
 
         if not self.uniswap.pool_equality(self.list_token_amount):
             price_a, price_b, price_pair = self.uniswap.get_token_prices_a_b_pair()
@@ -44,6 +38,15 @@ class BotPool:
                         self.list_token_amount, self.token_b_name, -difference, self.token_a_name)
                 except:
                     print("Swap failed.")
+
+    def convert_stable(self):
+        usdt_amount = self.list_token_amount[self.USDT]
+        if usdt_amount > 0:
+            split_usdt_amount = usdt_amount / 2
+            self.list_token_amount = self.uniswap.swap_tokens(
+                self.list_token_amount, self.USDT, split_usdt_amount, self.token_a_name)
+            self.list_token_amount = self.uniswap.swap_tokens(
+                self.list_token_amount, self.USDT, split_usdt_amount, self.token_b_name)
 
     def start_uniswap_strategy(self):
         self.swap_equal()
