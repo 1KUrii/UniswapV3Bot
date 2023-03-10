@@ -23,9 +23,7 @@ class BotPool:
         if not self.uniswap.pool_equality():
             token_a_price = self.get_token_price(self.token_a_name)
             token_b_price = self.get_token_price(self.token_b_name)
-            t = self.wallet[self.token_a_name]
-            b = self.wallet[self.token_b_name]
-            difference = t * token_a_price - b * token_b_price
+            difference = self.wallet[self.token_a_name] * token_a_price - self.wallet[self.token_b_name] * token_b_price
             try:
                 token_a_name = self.token_a_name
                 token_b_name = self.token_b_name

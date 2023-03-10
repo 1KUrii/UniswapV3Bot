@@ -1,4 +1,6 @@
+from src.Calculate.Uniswap.Pools import Pools
 from src.Calculate.Wallet.Wallet import Wallet
+
 
 class UniswapV3Pool:
     USDT = "USDT"
@@ -27,6 +29,7 @@ class UniswapV3Pool:
         })
 
         self.pool.time = time
+        # self.pool.pools[Pools.COMISSION] += 1
         self.pool.current_price_pair = price_pair
 
     def swap_tokens(self, token_a_name, amount_a, token_b_name):
@@ -43,34 +46,3 @@ class UniswapV3Pool:
         value_a = self.wallet[self.token_a_name] * self.token_prices[self.token_a_name]
         value_b = self.wallet[self.token_b_name] * self.token_prices[self.token_b_name]
         return value_a == value_b
-
-
-class Pools:
-    TOKEN_NAMES = "token_names"
-    TOKEN_AMOUNT = "token_amount"
-    RANGE = "range"
-    COMISSION = "comission"
-
-    def __init__(self):
-        self.pools = {}
-        self.time = 0
-        self.current_price_pair = 0
-
-    def create_pool(self, token_a_name, token_b_name, token_a_amount, token_b_amount, low_tick_range, high_tick_range):
-        pool = {
-            self.TOKEN_NAMES: [token_a_name, token_b_name],
-            self.TOKEN_AMOUNT: [token_a_amount, token_b_amount],
-            self.RANGE: [low_tick_range, high_tick_range],
-            self.COMISSION: 0}
-        self.pools[f"{token_a_name}/{token_b_name}"] = pool
-
-    def add_liquidity(self, list_token_amount, name_pool, token_name, token_amount):
-        pass
-
-    def in_diapazon(self, name_pool):
-        low_tick_range = self.pools[name_pool][self.RANGE][0]
-        high_tick_range = self.pools[name_pool][self.RANGE][1]
-        return low_tick_range <= self.current_price_pair <= high_tick_range
-
-    def delete_pool(self, name_pool):
-        del self.pools[name_pool]
