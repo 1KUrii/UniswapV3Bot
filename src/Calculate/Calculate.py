@@ -3,6 +3,7 @@ from datetime import datetime
 from src.Calculate.Bot.BotPool import BotPool
 from src.Calculate.Exchange.Exchange import Exchange
 from src.Calculate.Uniswap.UniswapV3Pool import UniswapV3Pool
+from src.Calculate.Wallet.Wallet import Wallet
 
 
 class Calculate:
@@ -26,21 +27,17 @@ class Calculate:
 
     def calculate(self):
         exchange = Exchange()
-        date, prices_pair, prices_a, prices_b = exchange.get_time_prices(self.token_a_name, self.token_b_name, self.timeframe, self.start_date,
-                                                     self.end_date)
-
-        uniswap = UniswapV3Pool(self.token_a_name, self.token_b_name)
-        bot = BotPool(uniswap, self.token_a_name, self.token_b_name, self.starting_capital)
+        date, prices_pair, prices_a, prices_b = exchange.get_time_prices(self.token_a_name, self.token_b_name,
+                                                                         self.timeframe, self.start_date,
+                                                                         self.end_date)
+        wallet = Wallet(self.token_a_name, self.token_b_name, self.starting_capital)
+        uniswap = UniswapV3Pool(wallet, self.token_a_name, self.token_b_name)
+        bot = BotPool(wallet, uniswap, self.token_a_name, self.token_b_name)
         for time, price_pair, price_a, price_b in zip(date, prices_pair, prices_a, prices_b):
             uniswap.data_update(time, price_pair, price_a, price_b)
+            bot.data_update(time)
             bot.start_uniswap_strategy()
-
         return bot
-
-    def output(self):
-        bot = self.calculate()
-        print(bot)
-        # print(f"{time}\t{price_pair:.4f}")
 
 
 if __name__ == "__main__":

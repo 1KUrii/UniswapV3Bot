@@ -17,7 +17,7 @@ class TestCalculate(unittest.TestCase):
         self.assertEqual(calc.end_date, datetime(2023, 3, 8))
         self.assertEqual(calc.timeframe, 'D')
         self.assertEqual(calc.starting_capital, 100.0)
-        calc.output()
+        print(calc.calculate())
 
 
 if __name__ == '__main__':

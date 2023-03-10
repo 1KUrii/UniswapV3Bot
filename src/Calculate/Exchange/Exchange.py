@@ -1,10 +1,9 @@
 import hashlib
 import hmac
-import json
 import time
-from datetime import datetime
-
 import requests
+
+from datetime import datetime
 
 from src.Calculate.Exchange.data import API_KEY, SECRET_KEY
 
@@ -42,17 +41,10 @@ class Exchange:
         signature = hash.hexdigest()
         return signature
 
-    def timestamp(self, dt):
+    @staticmethod
+    def timestamp(dt):
         epoch = datetime.utcfromtimestamp(0)
         return (dt - epoch).total_seconds() * 1000.0
-
-    def write_price_file(self, price_volume):
-        with open("../price_volume", 'w') as f:
-            json.dump(price_volume, f)
-
-    def read_price_file(self):
-        with open("../price_volume", 'r') as f:
-            return json.load(f)
 
     def get_kline(self, category, symbol, interval, start, end):
         if not all(isinstance(d, datetime) for d in [start, end]):
@@ -80,22 +72,4 @@ class Exchange:
         close_prices_a = [float(close_a[4]) for close_a in price_volume_a]
         close_prices_b = [float(close_b[4]) for close_b in price_volume_b]
         close_prices_pair = [pa / pb for pa, pb in zip(close_prices_a, close_prices_b)]
-
         return close_date[::-1], close_prices_pair[::-1], close_prices_a[::-1], close_prices_b[::-1]
-
-
-    def main(self):
-        price_volume_crv = self.get_kline('spot', 'CRVUSDT', 'D', (2022, 7, 31), (2023, 2, 16))
-        price_volume_matic = self.get_kline('spot', 'MATICUSDT', 'D', (2022, 7, 31), (2023, 2, 16))
-        close_date = []
-        close_price = []
-        for close_crv, close_matic in zip(price_volume_crv, price_volume_matic):
-            close_date.append(datetime.utcfromtimestamp(int(close_crv[0]) / 1000).date())
-            close_price.append(float(close_matic[4]) / float(close_crv[4]))
-
-        print(close_price)
-
-
-if __name__ == '__main__':
-    m = Exchange()
-    m.main()
