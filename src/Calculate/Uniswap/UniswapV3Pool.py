@@ -40,9 +40,3 @@ class UniswapV3Pool:
         value_b = list_tokens_amount[self.token_b_name] * self.token_prices[self.token_b_name]
         return value_a == value_b
 
-    def get_token_prices_a_b_pair(self):
-        return (
-            self.token_prices[self.token_b_name],
-            self.token_prices[self.token_a_name],
-            self.token_prices[self.PAIR],
-        )

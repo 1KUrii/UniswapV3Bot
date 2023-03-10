@@ -6,6 +6,7 @@ from src.Calculate.Uniswap.UniswapV3Pool import UniswapV3Pool
 class BotPool:
     USDT = "USDT"
     TIMESTAMP = "timestamp"
+    PAIR = "PAIR"
 
     def __init__(self, uniswap: UniswapV3Pool, token_a_name, token_b_name, starting_capital):
         self.token_a_name = token_a_name
@@ -20,24 +21,22 @@ class BotPool:
 
     def swap_equal(self):
         self.convert_stable()
-
         if not self.uniswap.pool_equality(self.list_token_amount):
-            price_a, price_b, price_pair = self.uniswap.get_token_prices_a_b_pair()
-            amount_token_a_name = self.list_token_amount[self.token_a_name]
-            amount_token_b_name = self.list_token_amount[self.token_b_name]
-            difference = amount_token_a_name / price_pair - amount_token_b_name
-            if difference > 0:
-                try:
-                    self.list_token_amount = self.uniswap.swap_tokens(
-                        self.list_token_amount, self.token_a_name, difference * price_pair, self.token_b_name)
-                except:
-                    print("Swap failed.")
-            else:
-                try:
-                    self.list_token_amount = self.uniswap.swap_tokens(
-                        self.list_token_amount, self.token_b_name, -difference, self.token_a_name)
-                except:
-                    print("Swap failed.")
+            token_a_price = self.get_token_price(self.token_a_name)
+            token_b_price = self.get_token_price(self.token_b_name)
+            difference = self.list_token_amount[self.token_a_name] * token_a_price - self.list_token_amount[
+                self.token_b_name] * token_b_price
+            try:
+                token_a_name = self.token_a_name
+                token_b_name = self.token_b_name
+                if not difference > 0:
+                    token_a_name, token_b_name = token_b_name, token_a_name
+                    token_a_price = token_b_price
+                    difference = -difference
+                self.list_token_amount = self.uniswap.swap_tokens(
+                    self.list_token_amount, token_a_name, difference / token_a_price, token_b_name)
+            except:
+                print("Swap failed.")
 
     def convert_stable(self):
         usdt_amount = self.list_token_amount[self.USDT]
@@ -50,7 +49,7 @@ class BotPool:
 
     def start_uniswap_strategy(self):
         self.swap_equal()
-        price_a, price_b, price_pair = self.uniswap.get_token_prices_a_b_pair()
+        price_a, price_b = self.get_token_price(self.token_a_name), self.get_token_price(self.token_b_name)
         time = datetime.datetime.now()
         self.log_transactions[self.token_a_name].append(
             (time, price_a, self.list_token_amount[self.token_a_name]))
