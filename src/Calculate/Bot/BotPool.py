@@ -1,4 +1,4 @@
-from src.Calculate.Uniswap.UniswapV3Pool import UniswapV3Pool
+from src.Calculate.Uniswap.Swap import Swap
 from src.Calculate.Wallet.Wallet import Wallet
 
 
@@ -7,7 +7,7 @@ class BotPool:
     TIMESTAMP = "timestamp"
     PAIR = "PAIR"
 
-    def __init__(self, wallet: Wallet, uniswap: UniswapV3Pool, token_a_name, token_b_name):
+    def __init__(self, wallet: Wallet, uniswap: Swap, token_a_name, token_b_name):
         self.token_a_name = token_a_name
         self.token_b_name = token_b_name
         self.wallet = wallet.list_token_amount

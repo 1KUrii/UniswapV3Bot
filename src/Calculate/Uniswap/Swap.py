@@ -1,8 +1,7 @@
-from src.Calculate.Uniswap.Pools import Pools
 from src.Calculate.Wallet.Wallet import Wallet
 
 
-class UniswapV3Pool:
+class Swap:
     USDT = "USDT"
     TIMESTAMP = "timestamp"
     PAIR = "PAIR"
@@ -18,7 +17,6 @@ class UniswapV3Pool:
             self.PAIR: 0
         }
         self.wallet = wallet.list_token_amount
-        self.pool = Pools()
 
     def data_update(self, time, price_pair, price_a, price_b):
         self.token_prices.update({
@@ -28,14 +26,10 @@ class UniswapV3Pool:
             self.PAIR: price_pair
         })
 
-        self.pool.time = time
-        # self.pool.pools[Pools.COMISSION] += 1
-        self.pool.current_price_pair = price_pair
-
     def swap_tokens(self, token_a_name, amount_a, token_b_name):
         token_a_amount = self.wallet[token_a_name]
         if token_a_amount < amount_a:
-            print(f"Not enough {token_a_name} tokens in the pool")
+            print(f"Not enough {token_a_name} tokens in the wallet")
         else:
             amount_b = amount_a * self.token_prices[token_b_name] / self.token_prices[token_a_name]
             self.wallet[token_a_name] -= amount_a
@@ -46,3 +40,4 @@ class UniswapV3Pool:
         value_a = self.wallet[self.token_a_name] * self.token_prices[self.token_a_name]
         value_b = self.wallet[self.token_b_name] * self.token_prices[self.token_b_name]
         return value_a == value_b
+

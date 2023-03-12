@@ -2,7 +2,7 @@ from datetime import datetime
 
 from src.Calculate.Bot.BotPool import BotPool
 from src.Calculate.Exchange.Exchange import Exchange
-from src.Calculate.Uniswap.UniswapV3Pool import UniswapV3Pool
+from src.Calculate.Uniswap.Swap import Swap
 from src.Calculate.Wallet.Wallet import Wallet
 
 
@@ -31,7 +31,7 @@ class Calculate:
                                                                          self.timeframe, self.start_date,
                                                                          self.end_date)
         wallet = Wallet(self.token_a_name, self.token_b_name, self.starting_capital)
-        uniswap = UniswapV3Pool(wallet, self.token_a_name, self.token_b_name)
+        uniswap = Swap(wallet, self.token_a_name, self.token_b_name)
         bot = BotPool(wallet, uniswap, self.token_a_name, self.token_b_name)
         for time, price_pair, price_a, price_b in zip(date, prices_pair, prices_a, prices_b):
             uniswap.data_update(time, price_pair, price_a, price_b)
