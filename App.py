@@ -1,5 +1,9 @@
+from src.Gui.Gui import Gui
+
+
 def app():
-    pass
+    Gui()
+
 
 if __name__ == '__main__':
     app()
