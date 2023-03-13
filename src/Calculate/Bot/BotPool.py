@@ -13,10 +13,6 @@ class BotPool:
         self.wallet = wallet
         self.log_transactions = []
         self.uniswap = swap
-        self.time = 0
-
-    def data_update(self, time):
-        self.time = time
 
     def swap_equal_a_b_token(self):
         if not self.wallet.wallet_equality():

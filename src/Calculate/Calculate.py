@@ -30,14 +30,14 @@ class Calculate:
         if self.starting_capital <= 0:
             raise ValueError("Starting capital must be positive.")
 
-    def get_token_volatility(self):
-        exchange = Exchange()
-        return exchange.get_time_prices(self.token_a_name, self.token_b_name, self.timeframe,
-                                        self.start_date, self.end_date)
+
+
 
     def calculate(self):
         exchange = Exchange()
-        date, prices_pair, prices_a, prices_b = self.get_token_volatility()
+        date, prices_pair, prices_a, prices_b = exchange.get_time_prices(self.token_a_name, self.token_b_name, self.timeframe,
+                                        self.start_date, self.end_date)
+        vaolunme_pool = exchange.get_pool_volume()
 
         wallet = Wallet(self.token_a_name, self.token_b_name, self.starting_capital)
         swap = Swap(wallet, self.token_a_name, self.token_b_name)
@@ -45,8 +45,6 @@ class Calculate:
 
         for timestamp, price_pair, price_a, price_b in zip(date, prices_pair, prices_a, prices_b):
             wallet.data_update(timestamp, price_pair, price_a, price_b)
-            swap.data_update(timestamp, price_pair, price_a, price_b)
-            bot.data_update(timestamp)
             bot.start_uniswap_strategy()
             wallet.logging_wallet()
         return wallet

@@ -16,7 +16,7 @@ class Wallet:
             self.USDT: 1,
             self.PAIR: 0
         }
-        self.pools = []
+        self.list_pools = []
         self.timestamp = 0
         self.log_wallet = []
 
@@ -63,7 +63,8 @@ class Wallet:
                     print(f"\t{token_name}: {token_amount}")
             print("Token Prices:")
             for token_name, token_price in list_token_prices.items():
-                print(f"\t{token_name}: {token_price}\n")
+                print(f"\t{token_name}: {token_price}")
+            print()
 
     def __str__(self):
         str = ""

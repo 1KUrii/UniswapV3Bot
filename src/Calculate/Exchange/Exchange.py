@@ -73,3 +73,6 @@ class Exchange:
         close_prices_b = [float(close_b[4]) for close_b in price_volume_b]
         close_prices_pair = [pa / pb for pa, pb in zip(close_prices_a, close_prices_b)]
         return close_date[::-1], close_prices_pair[::-1], close_prices_a[::-1], close_prices_b[::-1]
+
+    def get_pool_volume(self):
+        pass
