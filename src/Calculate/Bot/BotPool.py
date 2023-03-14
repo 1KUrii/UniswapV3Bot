@@ -14,6 +14,9 @@ class BotPool:
         self.log_transactions = []
         self.uniswap = swap
 
+    def pool_strategy(self):
+        pass
+
     def swap_equal_a_b_token(self):
         if not self.wallet.wallet_equality():
             token_a_price = self.get_token_price(self.token_a_name)
@@ -44,7 +47,7 @@ class BotPool:
         self.swap_equal_a_b_token()
 
     def get_token_price(self, token_name):
-        return self.wallet.list_token_prices[token_name]
+        return self.wallet.list_price[token_name]
 
     def token_value(self, token_name, amount=None):
         if not amount:

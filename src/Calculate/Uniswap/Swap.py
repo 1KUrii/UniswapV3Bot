@@ -16,8 +16,7 @@ class Swap:
         if token_a_amount < amount_a:
             print(f"Not enough {token_a_name} tokens in the wallet")
         else:
-            amount_b = amount_a * self.wallet.list_token_prices[token_a_name] / self.wallet.list_token_prices[
-                token_b_name]
+            amount_b = amount_a * self.wallet.list_price[token_a_name] / self.wallet.list_price[token_b_name]
             self.wallet.list_token_amount[token_a_name] -= amount_a
             self.wallet.list_token_amount[token_b_name] += amount_b
             print(f"{amount_a} {token_a_name} tokens swapped for {amount_b} {token_b_name} tokens")
