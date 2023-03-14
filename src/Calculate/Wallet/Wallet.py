@@ -1,3 +1,5 @@
+
+
 class Wallet:
     USDT = "USDT"
     PAIR = "PAIR"
@@ -16,7 +18,6 @@ class Wallet:
             self.USDT: 1,
             self.PAIR: 0
         }
-        self.list_pools = []
         self.timestamp = 0
         self.log_wallet = []
 

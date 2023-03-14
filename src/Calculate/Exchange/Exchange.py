@@ -1,5 +1,6 @@
 import hashlib
 import hmac
+import random
 import time
 import requests
 
@@ -15,6 +16,7 @@ class Exchange:
     SIGN_TYPE = "2"
 
     def __init__(self):
+        self.close_date = None
         self.api_key = API_KEY
         self.secret_key = SECRET_KEY
         self.httpClient = requests.Session()
@@ -68,11 +70,12 @@ class Exchange:
             raise ValueError(
                 f"Error getting prices for symbols {symbol_a} and {symbol_b} with interval {interval}: {str(e)}")
 
-        close_date = [datetime.utcfromtimestamp(int(close_a[0]) / 1000).date() for close_a in price_volume_a]
+        self.close_date = [datetime.utcfromtimestamp(int(close_a[0]) / 1000).date() for close_a in price_volume_a]
         close_prices_a = [float(close_a[4]) for close_a in price_volume_a]
         close_prices_b = [float(close_b[4]) for close_b in price_volume_b]
         close_prices_pair = [pa / pb for pa, pb in zip(close_prices_a, close_prices_b)]
-        return close_date[::-1], close_prices_pair[::-1], close_prices_a[::-1], close_prices_b[::-1]
+        return self.close_date[::-1], close_prices_pair[::-1], close_prices_a[::-1], close_prices_b[::-1]
 
-    def get_pool_volume(self):
-        pass
+    def get_pool_volume(self, low_volume, max_volume):
+        random_volume = [random.randint(low_volume, max_volume) for _ in self.close_date]
+        return random_volume
