@@ -39,26 +39,35 @@ class Calculate:
         if self.starting_capital <= 0:
             raise ValueError("Starting capital must be positive.")
 
+    def data_update(self, timestamp, price_pair, price_a, price_b, volume_pl):
+        self._data.timestamp = timestamp
+        self._data.list_price = {
+            self.a_name: price_a,
+            self.b_name: price_b,
+            Token.USDT.name: Token.USDT.value,
+            Token.PAIR.name: price_pair}
+        self._data.volume = volume_pl
+
     def calculate(self) -> Wallet:
         exchange = Exchange()
         date, prices_pair, prices_a, prices_b = exchange.get_time_prices(self.a_name, self.b_name,
                                                                          self.timeframe,
                                                                          self.start_date, self.end_date)
-        volume_pool = exchange.get_pool_volume(600_000, 4_000_000)
 
+        # нужно заменить тут на что-то, а то магические числа
+        volume_pool = exchange.get_pool_volume(600_000, 4_000_000)
+        volume_liquidity = exchange.get_pool_liquidity(600_000, 1_500_000)
+
+
+        # это вообще кинуть куда нибудь в отдельную функцию и self накинуть
         wallet = Wallet(self._data, self.a_name, self.b_name, self.starting_capital)
-        swap = Swap(wallet, self.a_name, self.b_name)
+        swap = Swap(wallet)
         bot = BotPool(wallet, swap, self.a_name, self.b_name)
         pool = Pool(self._data, wallet, self.a_name, self.b_name)
 
-        for timestamp, price_pair, price_a, price_b, volume_pl in zip(date, prices_pair, prices_a, prices_b, volume_pool):
-            self._data.timestamp = timestamp
-            self._data.list_price = {
-                self.a_name: price_a,
-                self.b_name: price_b,
-                Token.USDT.name: Token.USDT.value,
-                Token.PAIR.name: price_pair}
-            self._data.volume = volume_pl
+        # это можно как то обыграть черз функцию или вообще логику изменить
+        for timestamp, price_pair, price_a, price_b, volume_pl in zip(date, prices_pair, prices_a, prices_b, volume_pool, po):
+            self.data_update(timestamp, price_pair, price_a, price_b, volume_pl)
             bot.start_uniswap_strategy()
             wallet.logging_wallet()
         return wallet

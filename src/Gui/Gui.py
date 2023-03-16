@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 
 from src.Calculate.Calculate import Calculate
 
-
+# подумать какие конечные данные будут обрабатываться и как
 class Gui:
     def __init__(self):
         self.calc = Calculate()

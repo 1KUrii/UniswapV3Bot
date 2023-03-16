@@ -1,11 +1,13 @@
 from enum import Enum
 
 
+# лучше сделать общий Enum, ибо он во всех классах  или передавать его с данными
 class Token(Enum):
     USDT = 1
     PAIR = 0
 
 
+# подумать а может сюда еще какие то данные добавить
 class Data:
     def __init__(self):
         self._a_name = None

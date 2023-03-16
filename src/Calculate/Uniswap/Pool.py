@@ -10,14 +10,20 @@ class FeeTier(Enum):
     MEDIUM = 0.3
     LOW = 0.05
 
+
 class Token(Enum):
     USDT = 1
     PAIR = 0
 
+
+# подумать над подсчетом валью в пуле и как это суммировать с валлетом
 class Pool:
     def __init__(self, _data: Data, wallet: Wallet, a_name, b_name):
         self.total_volume = 0
+        self.total_liquidity = 0
+
         self.current_price_pair = 0
+        self.current_tick = 0
 
         self.a_name = a_name
         self.b_name = b_name
@@ -48,30 +54,37 @@ class Pool:
         self._data = _data
         self._data.add_observer(self)
 
+        # подумать над логами, может вообще отдельный класс под логи с наследованием и методами
+        self.logs = []
+
+    # добавить обновление комиссионных
     def update(self):
         self.timestamp = self._data.timestamp
         self.total_volume = self._data.volume
+        # надо исправить тут
+        self.total_liquidity = self._data.volume
         self.list_price = self._data.list_price
         # self.calculate_commission()
 
-    def calculate_estimated_fee(self, total_liquidity: float, delta_liquidity: float) -> float:
+    # разобраться, как это работает
+    def calculate_estimated_fee(self) -> float:
         """
         Calculate estimated fee based on the formula mentioned in Uniswap v3 whitepaper.
-        :param total_liquidity: float, total liquidity of the pool.
-        :param delta_liquidity: float, delta liquidity of the pool.
+        total_liquidity: float, total liquidity of the pool.
+        delta_liquidity: float, delta liquidity of the pool.
         :return: float, estimated fee of the pool.
         """
-        L = total_liquidity
-        deltaL = delta_liquidity
-
-        fee = self.fee_tier * self.total_volume * (deltaL / (L + deltaL))
+        delta_liquidity = self.calculate_delta_liquidity()
+        fee = self.fee_tier * self.total_volume * (delta_liquidity / (self.total_liquidity + delta_liquidity))
         return fee
 
-    def calculate_delta_liquidity(self, current_tick_id: int) -> float:
+    # разобраться, как это работает
+    def calculate_delta_liquidity(self) -> float:
         sqrt_p = math.sqrt(self.price_lower * self.price_upper)
-        if current_tick_id < self.low_tick:
-            delta_liquidity = self.a_amount * (sqrt_p * math.sqrt(self.price_lower)) / (sqrt_p - math.sqrt(self.price_lower))
-        elif current_tick_id > self.high_tick:
+        if self.current_tick < self.low_tick:
+            delta_liquidity = self.a_amount * (sqrt_p * math.sqrt(self.price_lower)) / (
+                    sqrt_p - math.sqrt(self.price_lower))
+        elif self.current_tick > self.high_tick:
             delta_liquidity = self.b_amount / (sqrt_p - math.sqrt(self.price_upper))
         else:
             delta_liquidity = min(
@@ -105,6 +118,7 @@ class Pool:
         self.wallet.list_token_amount[self.b_name] += self.commission_b_amount
         self.commission_a_amount = 0
 
+    # изменить работу метода или заменить на что то другое
     def calculate_commission(self):
         if not self.in_range():
             return
