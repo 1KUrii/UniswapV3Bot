@@ -16,8 +16,9 @@ class TestCalculate(unittest.TestCase):
         self.assertEqual(calc.end_date, datetime(2023, 3, 8))
         self.assertEqual(calc.timeframe, 'D')
         self.assertEqual(calc.starting_capital, 100.0)
-        wallet = calc.calculate()
+        wallet, pool = calc.calculate()
         print(wallet)
+        pool.output_logs()
         wallet.output_logs()
 
 

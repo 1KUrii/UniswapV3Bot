@@ -18,4 +18,4 @@ class Swap:
             amount_b = amount_a * self.wallet.list_price[a_name] / self.wallet.list_price[b_name]
             self.wallet.list_token_amount[a_name] -= amount_a
             self.wallet.list_token_amount[b_name] += amount_b
-            print(f"{amount_a} {a_name} tokens swapped for {amount_b} {b_name} tokens")
+            # print(f"{amount_a} {a_name} tokens swapped for {amount_b} {b_name} tokens")

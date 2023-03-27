@@ -7,18 +7,16 @@ class Token(Enum):
     USDT = 1
     PAIR = 0
 
+
 #  где хранить пул в валлете или лучше данные об пуле записывать в валлет, чтобы можно было подсчитать валью
 class Wallet:
-    USDT = "USDT"
-    PAIR = "PAIR"
-
     def __init__(self, _data: Data, a_name, b_name, starting_capital):
         self.a_name = a_name
         self.b_name = b_name
         self.list_token_amount = {
             self.a_name: 0,
             self.b_name: 0,
-            self.USDT: starting_capital
+            Token.USDT.name: starting_capital
         }
         self.list_price = {
             self.a_name: 0,
@@ -63,7 +61,7 @@ class Wallet:
             print(f"Timestamp: {timestamp}")
             print("Token Amounts:")
             for token_name, token_amount in list_token_amount.items():
-                if token_name != self.USDT:
+                if token_name != Token.USDT.name:
                     value = self.token_value(token_name, token_amount, list_token_prices[token_name])
                     print(f"\t{token_name}: {token_amount} at {value:.2f} USD")
                 else:

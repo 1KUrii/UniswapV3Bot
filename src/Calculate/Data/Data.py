@@ -14,7 +14,8 @@ class Data:
         self._b_name = None
         self._list_price = None
         self._timestamp = None
-        self._volume = None
+        self._volume_pool = None
+        self._volume_liquidity = None
         self._observers = []
 
     @property
@@ -54,12 +55,21 @@ class Data:
         self.notify_observers()
 
     @property
-    def volume(self):
-        return self._volume
+    def volume_pool(self):
+        return self._volume_pool
 
-    @volume.setter
-    def volume(self, value):
-        self._volume = value
+    @volume_pool.setter
+    def volume_pool(self, value):
+        self._volume_pool = value
+        self.notify_observers()
+
+    @property
+    def volume_liquidity(self):
+        return self._volume_liquidity
+
+    @volume_liquidity.setter
+    def volume_liquidity(self, value):
+        self._volume_liquidity = value
         self.notify_observers()
 
     def add_observer(self, observer):

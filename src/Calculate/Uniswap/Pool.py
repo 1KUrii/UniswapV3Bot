@@ -1,4 +1,3 @@
-import math
 from enum import Enum
 
 from src.Calculate.Data.Data import Data
@@ -19,10 +18,10 @@ class Token(Enum):
 # подумать над подсчетом валью в пуле и как это суммировать с валлетом
 class Pool:
     def __init__(self, _data: Data, wallet: Wallet, a_name, b_name):
+        self.liquidity = None
         self.total_volume = 0
         self.total_liquidity = 0
 
-        self.current_price_pair = 0
         self.current_tick = 0
 
         self.a_name = a_name
@@ -40,6 +39,8 @@ class Pool:
 
         self.commission_a_amount = 0
         self.commission_b_amount = 0
+
+        self.log_pool = []
 
         self.wallet = wallet
         self.fee_tier = FeeTier.MEDIUM.value
@@ -60,57 +61,76 @@ class Pool:
     # добавить обновление комиссионных
     def update(self):
         self.timestamp = self._data.timestamp
-        self.total_volume = self._data.volume
-        # надо исправить тут
-        self.total_liquidity = self._data.volume
+        self.total_volume = self._data.volume_pool
+        self.total_liquidity = self._data.volume_liquidity
         self.list_price = self._data.list_price
-        # self.calculate_commission()
 
-    # разобраться, как это работает
-    def calculate_estimated_fee(self) -> float:
-        """
-        Calculate estimated fee based on the formula mentioned in Uniswap v3 whitepaper.
-        total_liquidity: float, total liquidity of the pool.
-        delta_liquidity: float, delta liquidity of the pool.
-        :return: float, estimated fee of the pool.
-        """
-        delta_liquidity = self.calculate_delta_liquidity()
-        fee = self.fee_tier * self.total_volume * (delta_liquidity / (self.total_liquidity + delta_liquidity))
-        return fee
+    def logging_pool(self):
+        self.log_pool.append(
+            [self.timestamp, {self.a_name: self.a_amount, self.b_name: self.b_amount}, self.list_price.copy()])
 
-    # разобраться, как это работает
-    def calculate_delta_liquidity(self) -> float:
-        sqrt_p = math.sqrt(self.price_lower * self.price_upper)
-        if self.current_tick < self.low_tick:
-            delta_liquidity = self.a_amount * (sqrt_p * math.sqrt(self.price_lower)) / (
-                    sqrt_p - math.sqrt(self.price_lower))
-        elif self.current_tick > self.high_tick:
-            delta_liquidity = self.b_amount / (sqrt_p - math.sqrt(self.price_upper))
-        else:
-            delta_liquidity = min(
-                self.a_amount * (sqrt_p * math.sqrt(self.price_lower)) / (sqrt_p - math.sqrt(self.price_lower)),
-                self.b_amount / (sqrt_p - math.sqrt(self.price_upper)))
-        return delta_liquidity
+    def start_work(self):
+        self.calculate_liquidity()
 
-    def add_amount_pool(self, token_a_amount, token_b_amount):
+    def value_pool(self):
+        return self.a_amount * self.list_price[self.a_name] + self.b_amount * self.list_price[self.b_name]
+
+    def calculate_liquidity(self):
+        price_pair = self.list_price[Token.PAIR.name]
+        if price_pair <= self.price_lower:
+            self.a_amount += self.b_amount / self.price_lower
+            self.b_amount = 0
+
+        elif self.price_lower < price_pair < self.price_upper:
+            ratio_a = (self.price_upper - self.get_token_price(Token.PAIR.name)) / (self.price_upper - self.price_lower)
+            ratio_b = 1 - ratio_a
+
+            token_a_value = self.token_value(self.a_name, self.a_amount)
+            token_b_value = self.token_value(self.b_name, self.b_amount)
+            value_tokens = token_a_value + token_b_value
+
+            necessary_value_a = value_tokens * ratio_a
+            necessary_value_b = value_tokens * ratio_b
+
+            self.a_amount = necessary_value_a / self.get_token_price(self.a_name)
+            self.b_amount = necessary_value_b / self.get_token_price(self.b_name)
+
+        elif price_pair >= self.price_upper:
+            self.b_amount += self.a_amount * self.price_upper
+            self.a_amount = 0
+
+        print(
+            f"{self.a_amount} {self.a_name}, {self.b_amount} {self.b_name}, Price pair: {self.get_token_price(Token.PAIR.name)}, Value pool: {self.token_value(self.a_name, self.a_amount) + self.token_value(self.b_name, self.b_amount)}")
+
+    def add_liquidity(self, token_a_amount, token_b_amount):
         token_a_amount_wallet = self.wallet.list_token_amount[self.a_name]
         token_b_amount_wallet = self.wallet.list_token_amount[self.b_name]
         if token_a_amount_wallet < token_a_amount:
-            raise
+            raise ValueError(f"Not enough {self.a_name} in wallet.")
         elif token_b_amount_wallet < token_b_amount:
-            raise
+            raise ValueError(f"Not enough {self.b_name} in wallet.")
         else:
             self.wallet.list_token_amount[self.a_name] -= token_a_amount
             self.a_amount += token_a_amount
             self.wallet.list_token_amount[self.b_name] -= token_b_amount
             self.b_amount += token_b_amount
+        if not self.liquidity:
+            self.liquidity = self.value_pool()
+        return self
 
-    def set_range_pool(self, price_lower, price_high):
+    def get_token_amount_in_wallet(self, token_name):
+        return self.wallet.list_token_amount[token_name]
+
+    def get_token_price(self, token_name):
+        return self.list_price[token_name]
+
+    def add_range_pool(self, price_lower, price_high):
         self.price_lower = price_lower
         self.price_upper = price_high
+        return self
 
     def in_range(self):
-        return self.price_lower <= self.current_price_pair <= self.price_upper
+        return self.price_lower <= self.list_price[Token.PAIR.name] <= self.price_upper
 
     def remove_commission(self):
         self.wallet.list_token_amount[self.a_name] += self.commission_a_amount
@@ -118,10 +138,26 @@ class Pool:
         self.wallet.list_token_amount[self.b_name] += self.commission_b_amount
         self.commission_a_amount = 0
 
-    # изменить работу метода или заменить на что то другое
-    def calculate_commission(self):
-        if not self.in_range():
-            return
-        commission = self.total_volume * self.fee_tier
-        self.commission_a_amount += self.low_tick_range * commission * self.a_amount / self.total_volume
-        self.commission_b_amount += commission * self.b_amount / self.total_volume
+    def token_value(self, token_name, amount=None, price=None):
+        if not amount:
+            amount = self.get_token_amount_in_wallet(token_name)
+        if not price:
+            price = self.get_token_price(token_name)
+        return amount * price
+
+    def output_logs(self):
+        for i, (timestamp, list_token_amount, list_token_prices) in enumerate(self.log_pool):
+            print(f"Pool Log {i + 1}:")
+            print("-------------------------------------------------")
+            print(f"Timestamp: {timestamp}")
+            print("Token Amounts:")
+            for token_name, token_amount in list_token_amount.items():
+                if token_name != Token.USDT.name:
+                    value = self.token_value(token_name, token_amount, list_token_prices[token_name])
+                    print(f"\t{token_name}: {token_amount} at {value:.2f} USD")
+                else:
+                    print(f"\t{token_name}: {token_amount}")
+            print("Token Prices:")
+            for token_name, token_price in list_token_prices.items():
+                print(f"\t{token_name}: {token_price}")
+            print()

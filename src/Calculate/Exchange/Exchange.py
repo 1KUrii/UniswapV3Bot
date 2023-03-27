@@ -83,3 +83,4 @@ class Exchange:
     def get_pool_liquidity(self, low_volume, max_volume):
         random_liquidity = [random.randint(low_volume, max_volume) for _ in self.close_date]
         return random_liquidity
+
