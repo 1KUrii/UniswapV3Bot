@@ -1,14 +1,4 @@
-from enum import Enum
-
-
-# лучше сделать общий Enum, ибо он во всех классах  или передавать его с данными
-class Token(Enum):
-    USDT = 1
-    PAIR = 0
-
-
-# подумать а может сюда еще какие то данные добавить
-class Data:
+class WorkData:
     def __init__(self):
         self._a_name = None
         self._b_name = None
@@ -74,6 +64,7 @@ class Data:
 
     def add_observer(self, observer):
         self._observers.append(observer)
+        self.notify_observers()
 
     def remove_observer(self, observer):
         self._observers.remove(observer)

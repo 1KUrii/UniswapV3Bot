@@ -1,81 +1,51 @@
-from enum import Enum
-
-from src.Calculate.Data.Data import Data
-
-
-class Token(Enum):
-    USDT = 1
-    PAIR = 0
+from src.Calculate.ClassEnum.Network import Network
+from src.Calculate.ClassEnum.Token import Token
+from src.Calculate.ResultData.ResultData import ResultData
+from src.Calculate.WorkData.WorkData import WorkData
 
 
-#  где хранить пул в валлете или лучше данные об пуле записывать в валлет, чтобы можно было подсчитать валью
 class Wallet:
-    def __init__(self, _data: Data, a_name, b_name, starting_capital):
-        self.a_name = a_name
-        self.b_name = b_name
-        self.list_token_amount = {
-            self.a_name: 0,
-            self.b_name: 0,
-            Token.USDT.name: starting_capital
-        }
-        self.list_price = {
-            self.a_name: 0,
-            self.b_name: 0,
-            Token.USDT.name: 1,
-            Token.PAIR.name: 0
-        }
-        self.timestamp = 0
-        self.log_wallet = []
-        self._data = _data
-        self._data.add_observer(self)
+
+    def __init__(self, _result_data: ResultData, _work_data: WorkData, network: Network = Network.MATIC,
+                 starting_capital=0):
+        self.network = network
+        self.list_price = {}
+        self._work_data = _work_data
+        self._work_data.add_observer(self)
+        self.result_data = _result_data
+        self.result_data.add_observer(self)
+        self._list_token_amount = {
+            self.network.name: {self.network.name: 10 / self.list_price[self.network.name],
+                                Token.USDT.name: starting_capital - 10}}
 
     def update(self):
-        self.timestamp = self._data.timestamp
-        self.list_price = self._data.list_price
+        self.list_price = self._work_data.list_price
 
-    def wallet_equality(self):
-        value_a = self.list_token_amount[self.a_name] * self.list_price[self.a_name]
-        value_b = self.list_token_amount[self.b_name] * self.list_price[self.b_name]
+    def logged(self):
+        self.result_data.logging_wallet(self._list_token_amount[self.network.name])
+
+    def wallet_token_eq(self, a_name, b_name):
+        value_a = self._list_token_amount[self.network.name][a_name] * self.list_price[a_name]
+        value_b = self._list_token_amount[self.network.name][b_name] * self.list_price[b_name]
         return value_a == value_b
 
-    def logging_wallet(self):
-        self.log_wallet.append([self.timestamp, self.list_token_amount.copy(), self.list_price.copy()])
+    def add_token_id(self, token_name: str):
+        self._list_token_amount[self.network.name][token_name] = 2
 
-    def token_value(self, token_name, amount=None, price=None):
-        if not amount:
-            amount = self.list_price[token_name]
-        if not price:
-            price = self.list_price[token_name]
-        return amount * price
+    def get_token_amount(self, token_name: str):
+        return self._list_token_amount[self.network.name][token_name]
 
-    def portfolio_value(self):
-        value = 0
-        for token_name, token_amount in self.list_token_amount.items():
-            value += self.token_value(token_name, token_amount)
-        return value
+    def has_token(self, token_name: str):
+        return token_name in self._list_token_amount[self.network.name]
 
-    def output_logs(self):
-        for i, (timestamp, list_token_amount, list_token_prices) in enumerate(self.log_wallet):
-            print(f"Wallet Log {i + 1}:")
-            print("-------------------------------------------------")
-            print(f"Timestamp: {timestamp}")
-            print("Token Amounts:")
-            for token_name, token_amount in list_token_amount.items():
-                if token_name != Token.USDT.name:
-                    value = self.token_value(token_name, token_amount, list_token_prices[token_name])
-                    print(f"\t{token_name}: {token_amount} at {value:.2f} USD")
-                else:
-                    print(f"\t{token_name}: {token_amount}")
-            print("Token Prices:")
-            for token_name, token_price in list_token_prices.items():
-                print(f"\t{token_name}: {token_price}")
-            print()
+    def add_tokens(self, token_name: str, token_amount):
+        if self.has_token(token_name):
+            self._list_token_amount[self.network.name][token_name] += token_amount
+        else:
+            raise ValueError("Don't have this token in wallet")
 
-    def __str__(self):
-        str = ""
-        for token_name, token_amount in self.list_token_amount.items():
-            str += f"{token_name}:\n"
-            str += f"\t{token_amount} {token_name} at {self.list_price[token_name]:.2f} USD\n"
-            str += f"\tCurrent value: {self.token_value(token_name, token_amount):.2f} USD\n\n"
-        str += f"portfolio value: {self.portfolio_value()}\n\n"
-        return str
+    def subtract_amount(self, token_name, token_amount):
+        if token_amount <= self._list_token_amount[self.network.name][token_name]:
+            self._list_token_amount[self.network.name][token_name] -= token_amount
+        else:
+            raise ValueError("Not enough tokens for swap")

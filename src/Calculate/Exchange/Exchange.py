@@ -62,8 +62,9 @@ class Exchange:
             raise Exception(f"API error: {response.get('message')}")
         return response.get('result', {}).get('list', [])
 
-    def get_time_prices(self, symbol_a, symbol_b, interval, start, end):
+    def get_time_prices(self, network, symbol_a, symbol_b, interval, start, end):
         try:
+            price_volume_network = self.get_kline('spot', network+"USDT", interval, start, end)
             price_volume_a = self.get_kline('spot', symbol_a, interval, start, end)
             price_volume_b = self.get_kline('spot', symbol_b, interval, start, end)
         except Exception as e:
@@ -71,10 +72,12 @@ class Exchange:
                 f"Error getting prices for symbols {symbol_a} and {symbol_b} with interval {interval}: {str(e)}")
 
         self.close_date = [datetime.utcfromtimestamp(int(close_a[0]) / 1000).date() for close_a in price_volume_a]
+        close_prices_network = [float(close_net[4]) for close_net in price_volume_network]
         close_prices_a = [float(close_a[4]) for close_a in price_volume_a]
         close_prices_b = [float(close_b[4]) for close_b in price_volume_b]
         close_prices_pair = [pa / pb for pa, pb in zip(close_prices_a, close_prices_b)]
-        return self.close_date[::-1], close_prices_pair[::-1], close_prices_a[::-1], close_prices_b[::-1]
+        return self.close_date[::-1], close_prices_network[::-1], close_prices_pair[::-1],\
+            close_prices_a[::-1], close_prices_b[::-1]
 
     def get_pool_volume(self, low_volume, max_volume):
         random_volume = [random.randint(low_volume, max_volume) for _ in self.close_date]
